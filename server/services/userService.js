@@ -17,7 +17,11 @@ async function register(email, password) {
 		hashedPassword: bcrypt.hash(password, 10)
 	});
 
-	return createToken(user);
+	return {
+		_id: user._id,
+		email: user.email,
+		accessToken: createToken(user)
+	};
 }
 
 async function login(email, password) {
@@ -35,4 +39,15 @@ function createToken(user) {
 	};
 
 	return jwt.sign(payload, secret);
-} 
+}
+
+function parseToken(token) {
+
+}
+
+module.exports = {
+	register,
+	login,
+	logout,
+	parseToken
+}
