@@ -36,7 +36,7 @@ const itemSchema = new Schema({
 	material: {
 		type: String, default: ''
 	},
-	ownerId: {
+	_ownerId: {
 		type: ObjectId,
 		ref: 'User',
 		required: true
