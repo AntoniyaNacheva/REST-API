@@ -28,11 +28,13 @@ async function login(email, password) {
 		throw new Error('Incorrect email or password!');
 	}
 
-	const match = await bcrypt.compare(password, user.password);
+	const match = await bcrypt.compare(password, user.hashedPassword);
 
 	if (!match) {
 		throw new Error('Incorrect email or password!');
 	}
+
+	return createToken(user);
 
 }
 
