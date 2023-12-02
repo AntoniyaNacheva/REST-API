@@ -4,9 +4,10 @@ const User = require('../models/User');
 
 const secret = 'akjd84655jdskoa';
 
+const tokenBlackList = new Set();
+
 async function register(email, password) {
-	const existingUser = await User.findOne({ email })
-		.collation({ locale: 'en', strength: 2 });
+	const existingUser = await User.findOne({ email }).collation({ locale: 'en', strength: 2 });
 
 	if (existingUser) {
 		throw new Error('Email is taken!');
@@ -14,22 +15,29 @@ async function register(email, password) {
 
 	const user = await User.create({
 		email,
-		hashedPassword: bcrypt.hash(password, 10)
+		hashedPassword: await bcrypt.hash(password, 10)
 	});
 
-	return {
-		_id: user._id,
-		email: user.email,
-		accessToken: createToken(user)
-	};
+	return createToken(user);
 }
 
 async function login(email, password) {
+	const user = await User.findOne({ email }).collation({ locale: 'en', strength: 2 });
+
+	if (!user) {
+		throw new Error('Incorrect email or password!');
+	}
+
+	const match = await bcrypt.compare(password, user.password);
+
+	if (!match) {
+		throw new Error('Incorrect email or password!');
+	}
 
 }
 
-async function logout() {
-
+async function logout(token) {
+	tokenBlackList.add(token);
 }
 
 function createToken(user) {
@@ -38,11 +46,19 @@ function createToken(user) {
 		email: user.email
 	};
 
-	return jwt.sign(payload, secret);
+	return {
+		_id: user._id,
+		email: user.email,
+		accessToken: jwt.sign(payload, secret)
+	};
 }
 
 function parseToken(token) {
+	if (tokenBlackList.has(token)) {
+		throw new Error('Token is blacklisted!');
+	}
 
+	return jwt.verify(token, secret);
 }
 
 module.exports = {
